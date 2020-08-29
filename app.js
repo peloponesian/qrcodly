@@ -1,26 +1,13 @@
 const createError = require('http-errors');
 const express = require('express');
-const mongoose = require('mongoose');
+
 const bobyParser = require('body-parser');
 const cookieParser = require('cookie-parser')
 const qrcode = require('qrcode');
 
-// import from models
-const userModel = require('./models/user');
 
 // init app
 const app = express();
-
-// Connect to database
-mongoose.connect('mongodb://localhost:27017/qrdemo', {
-	useNewUrlParser: true, 
-	useUnifiedTopology: true 
-});
-let db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error"));
-db.once("open",(callback)=>{
-	console.log("connection succeeded");
-});
 
 // set the template engine
 app.set('view engine', 'ejs');
@@ -32,38 +19,16 @@ app.use(cookieParser());
 
 // loading the Get page
 app.get('/',(req, res)=>{
-    userModel.find((err, data)=>{
-        if(err) {console.log(err);}
-        else{
-            if(data!=''){
-                let temp = [];
-                for(let i=0; i<data.length; i++){
-                    
-                    let name = {data: data[i].name};
-                    temp.push(name);
-                    
-                    let phone = {data:data[i].phone};
-                    temp.push(phone);
-                }
-                qrcode.toDataURL(temp, {errorCorrectionLevel: 'H'}, (err, url)=>{
-                    console.log(url);
-                    res.render('qrcode', {data:url});
-                })
-            }else{res.render('qrcode', {data:''});}
-        }
-    });
+  res.render('qrcode', {data:''});
 });
 
 // loading the post page
 app.post('/', (req, res)=>{
-    let user = new userModel({
-        name:req.body.name,
-        phone:req.body.phone
-    });
-    user.save((err, data)=>{
-        if(err){console.log(err);}
-        else{res.redirect('/');}
-    });
+  console.log(req.body.info);
+    qrcode.toDataURL(req.body.info, {errorCorrectionLevel: 'H'}, (err, url)=>{
+        console.log(url);
+        res.render('qrcode', {data:url});
+    })
 });
 
 // catch 404 and forward to error handler
